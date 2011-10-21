@@ -65,7 +65,9 @@
                 throw new ArgumentOutOfRangeException("array");
             }
 
-            this.Fill(array, new int[array.Rank], 0, indices => 1.0);
+            var rand = new CryptoPseudoRandom(new byte[0]);
+
+            this.Fill(array, new int[array.Rank], 0, indices => rand.NextDouble());
         }
 
         private void Fill(Array array, int[] indices, int index, Func<int[], double> getValue)
