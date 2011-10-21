@@ -64,6 +64,28 @@
             {
                 throw new ArgumentOutOfRangeException("array");
             }
+
+            this.Fill(array, new int[array.Rank], 0, indices => 1.0);
+        }
+
+        private void Fill(Array array, int[] indices, int index, Func<int[], double> getValue)
+        {
+            var nextIndex = index + 1;
+
+            if (index >= indices.Length)
+            {
+                array.SetValue(getValue(indices), indices);
+            }
+            else
+            {
+                var length = array.GetLength(index);
+
+                for (int i = 0; i < length; i++)
+                {
+                    indices[index] = i;
+                    this.Fill(array, indices, nextIndex, getValue);
+                }
+            }
         }
     }
 }
