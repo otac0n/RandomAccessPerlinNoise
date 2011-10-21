@@ -53,7 +53,7 @@
             this.interpolator = interpolator;
         }
 
-        public void Fill(Array array, long x, long y)
+        public void Fill(Array array, long[] location)
         {
             if (array == null)
             {
@@ -65,15 +65,7 @@
                 throw new ArgumentOutOfRangeException("array");
             }
 
-            var a = BitConverter.GetBytes(this.seed);
-            var b = BitConverter.GetBytes(x);
-            var c = BitConverter.GetBytes(y);
-            var seed = new byte[a.Length + b.Length + c.Length];
-            Array.Copy(a, 0, seed, 0, a.Length);
-            Array.Copy(b, 0, seed, a.Length, b.Length);
-            Array.Copy(c, 0, seed, a.Length + b.Length, c.Length);
-
-            var rand = new CryptoPseudoRandom(seed);
+            var rand = GetRandom(this.seed, location);
 
             this.Fill(array, new int[array.Rank], 0, indices => rand.NextDouble());
         }
@@ -96,6 +88,22 @@
                     this.Fill(array, indices, nextIndex, getValue);
                 }
             }
+        }
+
+        private static CryptoPseudoRandom GetRandom(long seed, long[] location)
+        {
+            var a = BitConverter.GetBytes(seed);
+            var len = a.Length;
+
+            var seedBytes = new byte[len * (location.Length + 1)];
+            Array.Copy(a, 0, seedBytes, 0, a.Length);
+
+            for (int i = 0; i < location.Length; i++)
+            {
+                Array.Copy(BitConverter.GetBytes(location[i]), 0, seedBytes, len * (i + 1), len);
+            }
+
+            return new CryptoPseudoRandom(seedBytes);
         }
     }
 }

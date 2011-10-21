@@ -17,7 +17,7 @@ namespace RandomAccessPerlinNoise
             var perlin = new NoiseGenerator(0, 0.5, 5, new[] { w / 8, h / 8 }, false, Interpolator.Cosine);
 
             double[,] noise = new double[w, h];
-            perlin.Fill(noise, 0, 0);
+            perlin.Fill(noise, new[] { 0L, 0L });
 
             var b = new Bitmap(w, h, PixelFormat.Format32bppArgb);
             var g = Graphics.FromImage(b);
