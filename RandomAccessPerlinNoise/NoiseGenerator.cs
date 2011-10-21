@@ -53,7 +53,7 @@
             this.interpolator = interpolator;
         }
 
-        public void Fill(Array array)
+        public void Fill(Array array, long x, long y)
         {
             if (array == null)
             {
@@ -65,7 +65,15 @@
                 throw new ArgumentOutOfRangeException("array");
             }
 
-            var rand = new CryptoPseudoRandom(new byte[0]);
+            var a = BitConverter.GetBytes(this.seed);
+            var b = BitConverter.GetBytes(x);
+            var c = BitConverter.GetBytes(y);
+            var seed = new byte[a.Length + b.Length + c.Length];
+            Array.Copy(a, 0, seed, 0, a.Length);
+            Array.Copy(b, 0, seed, a.Length, b.Length);
+            Array.Copy(c, 0, seed, a.Length + b.Length, c.Length);
+
+            var rand = new CryptoPseudoRandom(seed);
 
             this.Fill(array, new int[array.Rank], 0, indices => rand.NextDouble());
         }
