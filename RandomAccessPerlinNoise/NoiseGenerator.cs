@@ -8,12 +8,13 @@
     public class NoiseGenerator
     {
         private readonly long seed;
-        private readonly IInterpolator interpolator;
         private readonly double persistence;
         private readonly int levels;
+        private readonly int[] size;
         private readonly bool smooth;
+        private readonly IInterpolator interpolator;
 
-        public NoiseGenerator(long seed, double persistence, int levels, bool smooth, IInterpolator interpolator)
+        public NoiseGenerator(long seed, double persistence, int levels, int[] size, bool smooth, IInterpolator interpolator)
         {
             this.seed = seed;
 
@@ -33,6 +34,17 @@
 
             this.smooth = smooth;
 
+            if (size == null)
+            {
+                throw new ArgumentNullException("size");
+            }
+            else if (size.Length == 0)
+            {
+                throw new ArgumentOutOfRangeException("size");
+            }
+
+            this.size = size;
+
             if (interpolator == null)
             {
                 throw new ArgumentNullException("interpolator");
@@ -48,6 +60,10 @@
                 throw new ArgumentNullException("array");
             }
 
+            if (array.Rank != this.size.Length)
+            {
+                throw new ArgumentOutOfRangeException("array");
+            }
         }
     }
 }

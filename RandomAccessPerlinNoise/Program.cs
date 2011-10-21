@@ -14,7 +14,7 @@ namespace RandomAccessPerlinNoise
             var w = 256;
             var h = 256;
 
-            var perlin = new NoiseGenerator(0, 0.5, 5, false, Interpolator.Cosine);
+            var perlin = new NoiseGenerator(0, 0.5, 5, new[] { w / 8, h / 8 }, false, Interpolator.Cosine);
 
             double[,] noise = new double[w, h];
             perlin.Fill(noise);
