@@ -65,6 +65,16 @@
                 throw new ArgumentOutOfRangeException("array");
             }
 
+            if (location == null)
+            {
+                throw new ArgumentNullException("location");
+            }
+
+            if (location.Length != this.size.Length)
+            {
+                throw new ArgumentOutOfRangeException("location");
+            }
+
             var rands = InitializeRandoms(this.seed, location);
 
             Fill(array, new int[array.Rank], 0, indices => ((CryptoPseudoRandom)rands.GetValue(new int[location.Length])).NextDouble());
