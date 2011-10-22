@@ -67,10 +67,10 @@
 
             var rand = GetRandom(this.seed, location);
 
-            this.Fill(array, new int[array.Rank], 0, indices => rand.NextDouble());
+            Fill(array, new int[array.Rank], 0, indices => rand.NextDouble());
         }
 
-        private void Fill(Array array, int[] indices, int index, Func<int[], double> getValue)
+        private static void Fill<T>(Array array, int[] indices, int index, Func<int[], T> getValue)
         {
             var nextIndex = index + 1;
 
@@ -85,7 +85,7 @@
                 for (int i = 0; i < length; i++)
                 {
                     indices[index] = i;
-                    this.Fill(array, indices, nextIndex, getValue);
+                    Fill(array, indices, nextIndex, getValue);
                 }
             }
         }
