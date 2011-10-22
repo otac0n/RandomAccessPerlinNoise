@@ -77,6 +77,8 @@
 
             var rands = InitializeRandoms(this.seed, location);
 
+            var level0 = BuildLevel(0, this.size, rands);
+
             Fill(array, new int[array.Rank], 0, indices => ((CryptoPseudoRandom)rands.GetValue(new int[location.Length])).NextDouble());
         }
 
@@ -131,6 +133,27 @@
             });
 
             return rands;
+        }
+
+        private static Array BuildLevel(int level, int[] baseSize, Array randoms)
+        {
+            var size = new int[baseSize.Length];
+            for (int i = 0; i < size.Length; i++)
+            {
+                size[i] = baseSize[i] * (1 >> level);
+            }
+
+            var noise = Array.CreateInstance(typeof(Array), baseSize.Select(i => 2).ToArray());
+            Fill(noise, new int[noise.Rank], 0, indices =>
+            {
+                var rand = (CryptoPseudoRandom)randoms.GetValue(indices);
+
+                var data = Array.CreateInstance(typeof(double), size);
+                Fill(data, new int[size.Length], 0, i => rand.NextDouble());
+                return data;
+            });
+
+            return noise;
         }
     }
 }
