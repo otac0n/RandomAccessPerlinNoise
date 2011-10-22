@@ -65,9 +65,9 @@
                 throw new ArgumentOutOfRangeException("array");
             }
 
-            var rand = GetRandom(this.seed, location);
+            var rands = InitializeRandoms(this.seed, location);
 
-            Fill(array, new int[array.Rank], 0, indices => rand.NextDouble());
+            Fill(array, new int[array.Rank], 0, indices => ((CryptoPseudoRandom)rands.GetValue(new int[location.Length])).NextDouble());
         }
 
         private static void Fill<T>(Array array, int[] indices, int index, Func<int[], T> getValue)
@@ -104,6 +104,23 @@
             }
 
             return new CryptoPseudoRandom(seedBytes);
+        }
+
+        private static Array InitializeRandoms(long seed, long[] location)
+        {
+            var rands = Array.CreateInstance(typeof(CryptoPseudoRandom), location.Select(i => 2).ToArray());
+            Fill(rands, new int[location.Length], 0, offsets =>
+            {
+                var actual = new long[location.Length];
+                for (int i = 0; i < location.Length; i++)
+                {
+                    actual[i] = location[i] + offsets[i];
+                }
+
+                return GetRandom(seed, actual);
+            });
+
+            return rands;
         }
     }
 }
