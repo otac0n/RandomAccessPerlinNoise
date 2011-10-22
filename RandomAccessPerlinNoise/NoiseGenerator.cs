@@ -10,6 +10,8 @@
         private readonly long seed;
         private readonly double persistence;
         private readonly int levels;
+        private readonly double[] persistences;
+        private readonly double scale;
         private readonly int[] size;
         private readonly bool smooth;
         private readonly IInterpolator interpolator;
@@ -31,6 +33,11 @@
             }
 
             this.levels = levels;
+
+            this.persistences = Enumerable.Range(0, this.levels)
+                                          .Select(l => Math.Pow(persistence, l))
+                                          .ToArray();
+            this.scale = this.persistences.Sum();
 
             this.smooth = smooth;
 
