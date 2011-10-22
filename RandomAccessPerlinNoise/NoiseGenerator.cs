@@ -77,7 +77,11 @@
 
             var rands = InitializeRandoms(this.seed, location);
 
-            var level0 = BuildLevel(0, this.size, rands);
+            var levels = new Array[this.levels];
+            for (int i = 0; i < this.levels; i++)
+            {
+                levels[i] = BuildLevel(i, this.size, rands);
+            }
 
             Fill(array, new int[array.Rank], 0, indices => ((CryptoPseudoRandom)rands.GetValue(new int[location.Length])).NextDouble());
         }
