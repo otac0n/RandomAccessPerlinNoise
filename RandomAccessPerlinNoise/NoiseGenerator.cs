@@ -90,7 +90,23 @@
                 levels[i] = BuildLevel(i, this.size, rands);
             }
 
-            Fill(array, new int[array.Rank], 0, indices => ((CryptoPseudoRandom)rands.GetValue(new int[location.Length])).NextDouble());
+            var size = new int[array.Rank];
+            for (int i = 0; i < array.Rank; i++)
+            {
+                size[i] = array.GetLength(i);
+            }
+
+            Fill(array, new int[array.Rank], 0, indices =>
+            {
+                var value = 0.0D;
+
+                for (int i = 0; i < levels.Length; i++)
+                {
+                    value += Interpolate(levels[i], indices, size) * persistences[i];
+                }
+
+                return value / scale;
+            });
         }
 
         private static void Fill<T>(Array array, int[] indices, int index, Func<int[], T> getValue)
@@ -165,6 +181,11 @@
             });
 
             return noise;
+        }
+
+        private double Interpolate(Array array, int[] indices, int[] size)
+        {
+            return 0;
         }
     }
 }
