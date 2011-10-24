@@ -167,7 +167,7 @@
             var size = new int[baseSize.Length];
             for (int i = 0; i < size.Length; i++)
             {
-                size[i] = baseSize[i] * (1 >> level);
+                size[i] = baseSize[i] * (1 << level);
             }
 
             var noise = Array.CreateInstance(typeof(Array), baseSize.Select(i => 2).ToArray());
