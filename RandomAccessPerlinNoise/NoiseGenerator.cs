@@ -185,7 +185,54 @@
 
         private double Interpolate(Array array, int[] indices, int[] size)
         {
-            return 0;
+            var zeroCell = (Array)array.GetValue(new int[array.Rank]);
+            var levelSize = new int[zeroCell.Rank];
+            for (int i = 0; i < levelSize.Length; i++)
+            {
+                levelSize[i] = zeroCell.GetLength(i);
+            }
+
+            var sourceIndices = new int[indices.Length];
+            var portions = new double[indices.Length];
+            for (int i = 0; i < portions.Length; i++)
+            {
+                int remainder;
+                sourceIndices[i] = Math.DivRem(indices[i] * levelSize[i], size[i], out remainder);
+                portions[i] = ((double)remainder) / size[i];
+            }
+
+            return Interpolate(array, levelSize, new int[indices.Length], sourceIndices, 0, portions);
+        }
+
+        private double Interpolate(Array array, int[] levelSize, int[] parentIndex, int[] subIndex, int index, double[] portions)
+        {
+            var nextIndex = index + 1;
+
+            if (index >= parentIndex.Length)
+            {
+                var sub = (Array)array.GetValue(parentIndex);
+                return (double)sub.GetValue(subIndex);
+            }
+            else
+            {
+                var origIndexVal = subIndex[index];
+
+                var a = Interpolate(array, levelSize, parentIndex, subIndex, nextIndex, portions);
+
+                subIndex[index] = origIndexVal + 1;
+                if (subIndex[index] >= levelSize[index])
+                {
+                    subIndex[index] = 0;
+                    parentIndex[index] = 1;
+                }
+
+                var b = Interpolate(array, levelSize, parentIndex, subIndex, nextIndex, portions);
+
+                subIndex[index] = origIndexVal;
+                parentIndex[index] = 0;
+
+                return this.interpolator.Interpolate(a, b, portions[index]);
+            }
         }
     }
 }
