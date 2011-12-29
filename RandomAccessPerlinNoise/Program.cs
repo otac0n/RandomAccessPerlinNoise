@@ -11,23 +11,31 @@ namespace RandomAccessPerlinNoise
     {
         public static void Main(string[] args)
         {
-            var w = 256;
-            var h = 256;
+            var w = 1024;
+            var h = 1024;
+            var W = 2;
+            var H = 2;
 
-            var perlin = new NoiseGenerator(0, 0.5, 5, new[] { w / 8, h / 8 }, false, Interpolator.Cosine);
+            var landGenerator = new NoiseGenerator(0, 0.5, 6, new[] { 4, 4 }, false, Interpolator.Cosine);
 
-            double[,] noise = new double[w, h];
-            perlin.Fill(noise, new[] { 0L, 0L });
-
-            var b = new Bitmap(w, h, PixelFormat.Format32bppArgb);
+            var b = new Bitmap(W * w, H * h, PixelFormat.Format32bppArgb);
             var g = Graphics.FromImage(b);
 
-            for (int y = 0; y < h; y++)
+            for (long Y = 0; Y < H; Y++)
             {
-                for (int x = 0; x < w; x++)
+                for (long X = 0; X < W; X++)
                 {
-                    var c = (int)Math.Round(noise[x, y] * 255);
-                    b.SetPixel(x, y, Color.FromArgb(c, c, c));
+                    double[,] noise = new double[w, h];
+                    landGenerator.Fill(noise, new[] { X, Y });
+
+                    for (int y = 0; y < h; y++)
+                    {
+                        for (int x = 0; x < w; x++)
+                        {
+                            var c = (int)Math.Round(noise[x, y] * 255);
+                            b.SetPixel((int)(x + X * w), (int)(y + Y * h), Color.FromArgb((c > 190 ? c : 0), c >= 160 ? c : 0, c < 160 ? c : (c > 190 ? c : 0)));
+                        }
+                    }
                 }
             }
 
