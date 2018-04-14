@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="Tests" Description="A test ruleset based on the Strict ruleset." ToolsVersion="14.0">
+  <Include Path="..\Tests.ruleset" Action="Default" />
+</RuleSet>
