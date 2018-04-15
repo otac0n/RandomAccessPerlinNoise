@@ -1,20 +1,20 @@
-﻿namespace RandomAccessPerlinNoise
+// Copyright © John Gietzen. All Rights Reserved. This source is subject to the MIT license. Please see license.md for more information.
+
+namespace RandomAccessPerlinNoise
 {
     using System;
-    using System.Collections.Generic;
     using System.Linq;
-    using System.Text;
 
     public class NoiseGenerator
     {
-        private readonly long seed;
-        private readonly double persistence;
+        private readonly IInterpolator interpolator;
         private readonly int levels;
+        private readonly double persistence;
         private readonly double[] persistences;
         private readonly double scale;
+        private readonly long seed;
         private readonly int[] size;
         private readonly bool smooth;
-        private readonly IInterpolator interpolator;
 
         public NoiseGenerator(long seed, double persistence, int levels, int[] size, bool smooth, IInterpolator interpolator)
         {
@@ -22,14 +22,14 @@
 
             if (persistence < 0.0 || persistence > 1.0)
             {
-                throw new ArgumentOutOfRangeException("persistence");
+                throw new ArgumentOutOfRangeException(nameof(persistence));
             }
 
             this.persistence = persistence;
 
             if (levels <= 0)
             {
-                throw new ArgumentOutOfRangeException("levels");
+                throw new ArgumentOutOfRangeException(nameof(levels));
             }
 
             this.levels = levels;
@@ -43,18 +43,18 @@
 
             if (size == null)
             {
-                throw new ArgumentNullException("size");
+                throw new ArgumentNullException(nameof(size));
             }
             else if (size.Length == 0)
             {
-                throw new ArgumentOutOfRangeException("size");
+                throw new ArgumentOutOfRangeException(nameof(size));
             }
 
             this.size = size;
 
             if (interpolator == null)
             {
-                throw new ArgumentNullException("interpolator");
+                throw new ArgumentNullException(nameof(interpolator));
             }
 
             this.interpolator = interpolator;
@@ -64,34 +64,34 @@
         {
             if (array == null)
             {
-                throw new ArgumentNullException("array");
+                throw new ArgumentNullException(nameof(array));
             }
 
             if (array.Rank != this.size.Length)
             {
-                throw new ArgumentOutOfRangeException("array");
+                throw new ArgumentOutOfRangeException(nameof(array));
             }
 
             if (location == null)
             {
-                throw new ArgumentNullException("location");
+                throw new ArgumentNullException(nameof(location));
             }
 
             if (location.Length != this.size.Length)
             {
-                throw new ArgumentOutOfRangeException("location");
+                throw new ArgumentOutOfRangeException(nameof(location));
             }
 
             var rands = InitializeRandoms(this.seed, location);
 
             var levels = new Array[this.levels];
-            for (int i = 0; i < this.levels; i++)
+            for (var i = 0; i < this.levels; i++)
             {
                 levels[i] = BuildLevel(i, this.size, rands);
             }
 
             var size = new int[array.Rank];
-            for (int i = 0; i < array.Rank; i++)
+            for (var i = 0; i < array.Rank; i++)
             {
                 size[i] = array.GetLength(i);
             }
@@ -100,72 +100,19 @@
             {
                 var value = 0.0D;
 
-                for (int i = 0; i < levels.Length; i++)
+                for (var i = 0; i < levels.Length; i++)
                 {
-                    value += Interpolate(levels[i], indices, size) * persistences[i];
+                    value += this.Interpolate(levels[i], indices, size) * this.persistences[i];
                 }
 
-                return value / scale;
+                return value / this.scale;
             });
-        }
-
-        private static void Fill<T>(Array array, int[] indices, int index, Func<int[], T> getValue)
-        {
-            var nextIndex = index + 1;
-
-            if (index >= indices.Length)
-            {
-                array.SetValue(getValue(indices), indices);
-            }
-            else
-            {
-                var length = array.GetLength(index);
-
-                for (int i = 0; i < length; i++)
-                {
-                    indices[index] = i;
-                    Fill(array, indices, nextIndex, getValue);
-                }
-            }
-        }
-
-        private static CryptoPseudoRandom GetRandom(long seed, long[] location)
-        {
-            var a = BitConverter.GetBytes(seed);
-            var len = a.Length;
-
-            var seedBytes = new byte[len * (location.Length + 1)];
-            Array.Copy(a, 0, seedBytes, 0, a.Length);
-
-            for (int i = 0; i < location.Length; i++)
-            {
-                Array.Copy(BitConverter.GetBytes(location[i]), 0, seedBytes, len * (i + 1), len);
-            }
-
-            return new CryptoPseudoRandom(seedBytes);
-        }
-
-        private static Array InitializeRandoms(long seed, long[] location)
-        {
-            var rands = Array.CreateInstance(typeof(CryptoPseudoRandom), location.Select(i => 2).ToArray());
-            Fill(rands, new int[location.Length], 0, offsets =>
-            {
-                var actual = new long[location.Length];
-                for (int i = 0; i < location.Length; i++)
-                {
-                    actual[i] = location[i] + offsets[i];
-                }
-
-                return GetRandom(seed, actual);
-            });
-
-            return rands;
         }
 
         private static Array BuildLevel(int level, int[] baseSize, Array randoms)
         {
             var size = new int[baseSize.Length];
-            for (int i = 0; i < size.Length; i++)
+            for (var i = 0; i < size.Length; i++)
             {
                 size[i] = baseSize[i] * (1 << level);
             }
@@ -183,25 +130,78 @@
             return noise;
         }
 
+        private static void Fill<T>(Array array, int[] indices, int index, Func<int[], T> getValue)
+        {
+            var nextIndex = index + 1;
+
+            if (index >= indices.Length)
+            {
+                array.SetValue(getValue(indices), indices);
+            }
+            else
+            {
+                var length = array.GetLength(index);
+
+                for (var i = 0; i < length; i++)
+                {
+                    indices[index] = i;
+                    Fill(array, indices, nextIndex, getValue);
+                }
+            }
+        }
+
+        private static CryptoPseudoRandom GetRandom(long seed, long[] location)
+        {
+            var a = BitConverter.GetBytes(seed);
+            var len = a.Length;
+
+            var seedBytes = new byte[len * (location.Length + 1)];
+            Array.Copy(a, 0, seedBytes, 0, a.Length);
+
+            for (var i = 0; i < location.Length; i++)
+            {
+                Array.Copy(BitConverter.GetBytes(location[i]), 0, seedBytes, len * (i + 1), len);
+            }
+
+            return new CryptoPseudoRandom(seedBytes);
+        }
+
+        private static Array InitializeRandoms(long seed, long[] location)
+        {
+            var rands = Array.CreateInstance(typeof(CryptoPseudoRandom), location.Select(i => 2).ToArray());
+            Fill(rands, new int[location.Length], 0, offsets =>
+            {
+                var actual = new long[location.Length];
+                for (var i = 0; i < location.Length; i++)
+                {
+                    actual[i] = location[i] + offsets[i];
+                }
+
+                return GetRandom(seed, actual);
+            });
+
+            return rands;
+        }
+
         private double Interpolate(Array array, int[] indices, int[] size)
         {
             var zeroCell = (Array)array.GetValue(new int[array.Rank]);
             var levelSize = new int[zeroCell.Rank];
-            for (int i = 0; i < levelSize.Length; i++)
+            for (var i = 0; i < levelSize.Length; i++)
             {
                 levelSize[i] = zeroCell.GetLength(i);
             }
 
             var sourceIndices = new int[indices.Length];
             var portions = new double[indices.Length];
-            for (int i = 0; i < portions.Length; i++)
+            for (var i = 0; i < portions.Length; i++)
             {
                 int remainder;
                 sourceIndices[i] = Math.DivRem(indices[i] * levelSize[i], size[i], out remainder);
                 portions[i] = ((double)remainder) / size[i];
             }
 
-            return Interpolate(array, levelSize, new int[indices.Length], sourceIndices, 0, portions);
+            return this.Interpolate(array, levelSize, new int[indices.Length], sourceIndices, 0, portions);
         }
 
         private double Interpolate(Array array, int[] levelSize, int[] parentIndex, int[] subIndex, int index, double[] portions)
@@ -217,7 +217,7 @@
             {
                 var origIndexVal = subIndex[index];
 
-                var a = Interpolate(array, levelSize, parentIndex, subIndex, nextIndex, portions);
+                var a = this.Interpolate(array, levelSize, parentIndex, subIndex, nextIndex, portions);
 
                 subIndex[index] = origIndexVal + 1;
                 if (subIndex[index] >= levelSize[index])
@@ -226,7 +226,7 @@
                     parentIndex[index] = 1;
                 }
 
-                var b = Interpolate(array, levelSize, parentIndex, subIndex, nextIndex, portions);
+                var b = this.Interpolate(array, levelSize, parentIndex, subIndex, nextIndex, portions);
 
                 subIndex[index] = origIndexVal;
                 parentIndex[index] = 0;

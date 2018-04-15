@@ -1,4 +1,6 @@
-﻿namespace RandomAccessPerlinNoise
+// Copyright © John Gietzen. All Rights Reserved. This source is subject to the MIT license. Please see license.md for more information.
+
+namespace RandomAccessPerlinNoise
 {
     using System;
     using System.Diagnostics;
@@ -7,10 +9,10 @@
 
     public class CryptoPseudoRandom
     {
-        private static readonly int doubleSize;
-        private static readonly int doubleExponentByteA;
-        private static readonly int doubleExponentByteB;
-        private static readonly int blockWidth;
+        private static readonly int BlockWidth;
+        private static readonly int DoubleExponentByteA;
+        private static readonly int DoubleExponentByteB;
+        private static readonly int DoubleSize;
 
         private readonly byte[] key;
         private readonly MD5CryptoServiceProvider md5;
@@ -20,20 +22,20 @@
         static CryptoPseudoRandom()
         {
             var bytes = BitConverter.GetBytes(1.0D);
-            doubleSize = bytes.Length;
-            doubleExponentByteA = Enumerable.Range(0, doubleSize).Where(i => bytes[i] == 0x3F).Single();
-            doubleExponentByteB = Enumerable.Range(0, doubleSize).Where(i => bytes[i] == 0xF0).Single();
+            DoubleSize = bytes.Length;
+            DoubleExponentByteA = Enumerable.Range(0, DoubleSize).Where(i => bytes[i] == 0x3F).Single();
+            DoubleExponentByteB = Enumerable.Range(0, DoubleSize).Where(i => bytes[i] == 0xF0).Single();
 
-            blockWidth = new MD5CryptoServiceProvider().ComputeHash(bytes).Length;
+            BlockWidth = new MD5CryptoServiceProvider().ComputeHash(bytes).Length;
 
-            Debug.Assert(blockWidth % doubleSize == 0);
+            Debug.Assert(BlockWidth % DoubleSize == 0);
         }
 
         public CryptoPseudoRandom(byte[] seed)
         {
             if (seed == null)
             {
-                throw new ArgumentNullException("seed");
+                throw new ArgumentNullException(nameof(seed));
             }
 
             this.md5 = new MD5CryptoServiceProvider();
@@ -45,19 +47,19 @@
 
         public double NextDouble()
         {
-            EnsureAvailable();
+            this.EnsureAvailable();
 
             // Read the double's data from the array.
-            byte[] doubleData = new byte[doubleSize];
-            Array.Copy(this.currentBlock, this.currentOffset, doubleData, 0, doubleSize);
+            var doubleData = new byte[DoubleSize];
+            Array.Copy(this.currentBlock, this.currentOffset, doubleData, 0, DoubleSize);
 
             // Constrain the double to be in the range [1, 2).
-            doubleData[doubleExponentByteA] = 0x3f;
-            doubleData[doubleExponentByteB] = (byte)((doubleData[doubleExponentByteB] & 0xF) | 0xF0);
+            doubleData[DoubleExponentByteA] = 0x3f;
+            doubleData[DoubleExponentByteB] = (byte)((doubleData[DoubleExponentByteB] & 0xF) | 0xF0);
 
             // Convert the bits!
             var value = BitConverter.ToDouble(doubleData, 0);
-            this.currentOffset += doubleSize;
+            this.currentOffset += DoubleSize;
 
             // Subtract one, to get the range [0, 1).
             return value - 1;
@@ -65,11 +67,11 @@
 
         private void EnsureAvailable()
         {
-            if (this.currentOffset >= blockWidth)
+            if (this.currentOffset >= BlockWidth)
             {
-                byte[] chunk = new byte[blockWidth * 2];
+                var chunk = new byte[BlockWidth * 2];
                 this.key.CopyTo(chunk, 0);
-                this.currentBlock.CopyTo(chunk, blockWidth);
+                this.currentBlock.CopyTo(chunk, BlockWidth);
 
                 this.currentBlock = this.md5.ComputeHash(chunk);
                 this.currentOffset = 0;
