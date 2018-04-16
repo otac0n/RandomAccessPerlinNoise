@@ -4,6 +4,8 @@ install:
   - "SET PATH=C:\\ProgramData\\chocolatey\\bin;%PATH%"
   - choco install gitversion.portable -pre -y
   - choco install GitReleaseNotes.Portable
+  - choco install opencover.portable
+  - choco install xunit
   - pip install codecov
 before_build:
   - nuget restore
@@ -11,6 +13,9 @@ before_build:
   - GitReleaseNotes . /AllTags /C breaking /O ReleaseNotes.md
 build:
   project: RandomAccessPerlinNoise.sln
+after_test:
+  - OpenCover.Console.exe -target:"dotnet.exe" -targetargs:test -register:user -filter:"+[*]* -[xunit*]*" -output:coverage.xml -oldStyle
+  - codecov -X gcov -f "coverage.xml"
 artifacts:
   - path: 'ReleaseNotes.md'
   - path: '**\*.nupkg'
