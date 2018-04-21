@@ -3,43 +3,40 @@
 namespace RandomAccessPerlinNoise
 {
     using System;
-    using System.Diagnostics;
     using System.Linq;
     using System.Security.Cryptography;
 
-    public class CryptoPseudoRandom
+    public class HashPseudoRandom
     {
-        private static readonly int BlockWidth;
         private static readonly int DoubleExponentByteA;
         private static readonly int DoubleExponentByteB;
         private static readonly int DoubleSize;
 
+        private readonly int blockWidth;
+        private readonly HashAlgorithm hashAlgorithm;
         private readonly byte[] key;
-        private readonly MD5CryptoServiceProvider md5;
         private byte[] currentBlock;
         private int currentOffset;
 
-        static CryptoPseudoRandom()
+        static HashPseudoRandom()
         {
             var bytes = BitConverter.GetBytes(1.0D);
             DoubleSize = bytes.Length;
             DoubleExponentByteA = Enumerable.Range(0, DoubleSize).Where(i => bytes[i] == 0x3F).Single();
             DoubleExponentByteB = Enumerable.Range(0, DoubleSize).Where(i => bytes[i] == 0xF0).Single();
-
-            BlockWidth = new MD5CryptoServiceProvider().ComputeHash(bytes).Length;
-
-            Debug.Assert(BlockWidth % DoubleSize == 0);
         }
 
-        public CryptoPseudoRandom(byte[] seed)
+        public HashPseudoRandom(HashAlgorithm hashAlgorithm, byte[] seed = null)
         {
-            if (seed == null)
-            {
-                throw new ArgumentNullException(nameof(seed));
-            }
+            this.hashAlgorithm = hashAlgorithm ?? throw new ArgumentNullException(nameof(hashAlgorithm));
+            seed = seed ?? Array.Empty<byte>();
 
-            this.md5 = new MD5CryptoServiceProvider();
-            this.key = this.md5.ComputeHash(seed);
+            this.key = this.hashAlgorithm.ComputeHash(seed);
+            this.blockWidth = this.key.Length;
+            if (this.blockWidth % DoubleSize != 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(hashAlgorithm));
+            }
 
             this.currentBlock = this.key;
             this.currentOffset = 0;
@@ -67,13 +64,13 @@ namespace RandomAccessPerlinNoise
 
         private void EnsureAvailable()
         {
-            if (this.currentOffset >= BlockWidth)
+            if (this.currentOffset >= this.blockWidth)
             {
-                var chunk = new byte[BlockWidth * 2];
+                var chunk = new byte[this.blockWidth * 2];
                 this.key.CopyTo(chunk, 0);
-                this.currentBlock.CopyTo(chunk, BlockWidth);
+                this.currentBlock.CopyTo(chunk, this.blockWidth);
 
-                this.currentBlock = this.md5.ComputeHash(chunk);
+                this.currentBlock = this.hashAlgorithm.ComputeHash(chunk);
                 this.currentOffset = 0;
             }
         }

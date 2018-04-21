@@ -4,6 +4,7 @@ namespace RandomAccessPerlinNoise
 {
     using System;
     using System.Linq;
+    using MurMurHashAlgorithm;
 
     public class NoiseGenerator
     {
@@ -120,7 +121,7 @@ namespace RandomAccessPerlinNoise
             var noise = Array.CreateInstance(typeof(Array), baseSize.Select(i => 2).ToArray());
             Fill(noise, new int[noise.Rank], 0, indices =>
             {
-                var rand = (CryptoPseudoRandom)randoms.GetValue(indices);
+                var rand = (HashPseudoRandom)randoms.GetValue(indices);
 
                 var data = Array.CreateInstance(typeof(double), size);
                 Fill(data, new int[size.Length], 0, i => rand.NextDouble());
@@ -150,7 +151,7 @@ namespace RandomAccessPerlinNoise
             }
         }
 
-        private static CryptoPseudoRandom GetRandom(long seed, long[] location)
+        private static HashPseudoRandom GetRandom(long seed, long[] location)
         {
             var a = BitConverter.GetBytes(seed);
             var len = a.Length;
@@ -163,12 +164,12 @@ namespace RandomAccessPerlinNoise
                 Array.Copy(BitConverter.GetBytes(location[i]), 0, seedBytes, len * (i + 1), len);
             }
 
-            return new CryptoPseudoRandom(seedBytes);
+            return new HashPseudoRandom(new MurMurHash3Algorithm128x64(seed), seedBytes);
         }
 
         private static Array InitializeRandoms(long seed, long[] location)
         {
-            var rands = Array.CreateInstance(typeof(CryptoPseudoRandom), location.Select(i => 2).ToArray());
+            var rands = Array.CreateInstance(typeof(HashPseudoRandom), location.Select(i => 2).ToArray());
             Fill(rands, new int[location.Length], 0, offsets =>
             {
                 var actual = new long[location.Length];
