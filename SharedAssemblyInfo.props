@@ -3,5 +3,6 @@
     <Authors>John Gietzen</Authors>
     <Copyright>Copyright © 2018 $(Authors)</Copyright>
     <Product>RandomAccessPerlinNoise</Product>
+    <NeutralLanguage>en-US</NeutralLanguage>
   </PropertyGroup>
 </Project>

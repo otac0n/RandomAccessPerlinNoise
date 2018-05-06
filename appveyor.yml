@@ -13,8 +13,9 @@ before_build:
   - GitReleaseNotes . /AllTags /C breaking /O ReleaseNotes.md
 build:
   project: RandomAccessPerlinNoise.sln
+test_script:
+  - OpenCover.Console.exe -target:"dotnet.exe" "-targetargs:test ""RandomAccessPerlinNoise.Tests\RandomAccessPerlinNoise.Tests.csproj"" --configuration %CONFIGURATION% --no-build" -register:user -filter:"+[*]* -[xunit*]*" -output:coverage.xml -oldStyle
 after_test:
-  - OpenCover.Console.exe -target:"dotnet.exe" -targetargs:test -register:user -filter:"+[*]* -[xunit*]*" -output:coverage.xml -oldStyle
   - codecov -X gcov -f "coverage.xml"
 artifacts:
   - path: 'ReleaseNotes.md'
