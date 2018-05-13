@@ -5,10 +5,11 @@ namespace RandomAccessPerlinNoise
     using System;
     using System.Linq;
     using MurMurHashAlgorithm;
+    using RandomImpls;
 
     public class NoiseGenerator
     {
-        private readonly IInterpolator interpolator;
+        private readonly Interpolation interpolation;
         private readonly int levels;
         private readonly double persistence;
         private readonly double[] persistences;
@@ -17,7 +18,7 @@ namespace RandomAccessPerlinNoise
         private readonly int[] size;
         private readonly bool smooth;
 
-        public NoiseGenerator(long seed, double persistence, int levels, int[] size, bool smooth, IInterpolator interpolator)
+        public NoiseGenerator(long seed, double persistence, int levels, int[] size, bool smooth, Interpolation interpolation)
         {
             this.seed = seed;
 
@@ -53,12 +54,7 @@ namespace RandomAccessPerlinNoise
 
             this.size = size;
 
-            if (interpolator == null)
-            {
-                throw new ArgumentNullException(nameof(interpolator));
-            }
-
-            this.interpolator = interpolator;
+            this.interpolation = interpolation ?? throw new ArgumentNullException(nameof(interpolation));
         }
 
         public void Fill(Array array, long[] location)
@@ -83,7 +79,7 @@ namespace RandomAccessPerlinNoise
                 throw new ArgumentOutOfRangeException(nameof(location));
             }
 
-            var rands = InitializeRandoms(this.seed, location);
+            var rands = this.InitializeRandoms(this.seed, location);
 
             var levels = new Array[this.levels];
             for (var i = 0; i < this.levels; i++)
@@ -121,7 +117,7 @@ namespace RandomAccessPerlinNoise
             var noise = Array.CreateInstance(typeof(Array), baseSize.Select(i => 2).ToArray());
             Fill(noise, new int[noise.Rank], 0, indices =>
             {
-                var rand = (HashPseudoRandom)randoms.GetValue(indices);
+                var rand = (Random)randoms.GetValue(indices);
 
                 var data = Array.CreateInstance(typeof(double), size);
                 Fill(data, new int[size.Length], 0, i => rand.NextDouble());
@@ -151,7 +147,7 @@ namespace RandomAccessPerlinNoise
             }
         }
 
-        private static HashPseudoRandom GetRandom(long seed, long[] location)
+        private Random GetRandom(long seed, long[] location)
         {
             var a = BitConverter.GetBytes(seed);
             var len = a.Length;
@@ -164,12 +160,12 @@ namespace RandomAccessPerlinNoise
                 Array.Copy(BitConverter.GetBytes(location[i]), 0, seedBytes, len * (i + 1), len);
             }
 
-            return new HashPseudoRandom(new MurMurHash3Algorithm128x64(seed), seedBytes);
+            return new HashAlgorithmRandom(new MurMurHash3Algorithm128x64(seed), seedBytes);
         }
 
-        private static Array InitializeRandoms(long seed, long[] location)
+        private Array InitializeRandoms(long seed, long[] location)
         {
-            var rands = Array.CreateInstance(typeof(HashPseudoRandom), location.Select(i => 2).ToArray());
+            var rands = Array.CreateInstance(typeof(Random), location.Select(i => 2).ToArray());
             Fill(rands, new int[location.Length], 0, offsets =>
             {
                 var actual = new long[location.Length];
@@ -178,7 +174,7 @@ namespace RandomAccessPerlinNoise
                     actual[i] = location[i] + offsets[i];
                 }
 
-                return GetRandom(seed, actual);
+                return this.GetRandom(seed, actual);
             });
 
             return rands;
@@ -232,7 +228,7 @@ namespace RandomAccessPerlinNoise
                 subIndex[index] = origIndexVal;
                 parentIndex[index] = 0;
 
-                return this.interpolator.Interpolate(a, b, portions[index]);
+                return this.interpolation(a, b, portions[index]);
             }
         }
     }

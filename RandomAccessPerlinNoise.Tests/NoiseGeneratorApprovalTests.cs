@@ -30,7 +30,7 @@ namespace RandomAccessPerlinNoise.Tests
             var W = 2;
             var H = 2;
 
-            var landGenerator = new NoiseGenerator(0, 0.5, 6, new[] { 4, 4 }, false, Interpolator.Cosine);
+            var landGenerator = new NoiseGenerator(0, 0.5, 6, new[] { 4, 4 }, false, Interpolations.Cosine);
 
             using (var bitmap = new Bitmap(W * w, H * h, PixelFormat.Format32bppArgb))
             using (var graphics = Graphics.FromImage(bitmap))
