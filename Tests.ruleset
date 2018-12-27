@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RuleSet Name="Tests" Description="A test ruleset based on the Strict ruleset." ToolsVersion="14.0">
+<RuleSet Name="Tests" Description="A test ruleset based on the Strict ruleset." ToolsVersion="15.0">
   <Include Path="Strict.ruleset" Action="Default" />
   <Rules AnalyzerId="Microsoft.Analyzers.ManagedCodeAnalysis" RuleNamespace="Microsoft.Rules.Managed">
     <Rule Id="CA1305" Action="None" />

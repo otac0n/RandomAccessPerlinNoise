@@ -10,6 +10,7 @@
     <Description />
     <PackageLicenseUrl>https://raw.github.com/otac0n/RandomAccessPerlinNoise/master/license.md</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/otac0n/RandomAccessPerlinNoise</PackageProjectUrl>
+    <PackageTags>perlin;perlin noise;random access perlin noise</PackageTags>
   </PropertyGroup>
   <ItemGroup>
     <AdditionalFiles Include="..\stylecop.json" Link="stylecop.json" />
