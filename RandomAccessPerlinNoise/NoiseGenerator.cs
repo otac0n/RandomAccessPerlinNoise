@@ -93,7 +93,7 @@ namespace RandomAccessPerlinNoise
                 size[i] = array.GetLength(i);
             }
 
-            Fill(array, new int[array.Rank], 0, indices =>
+            Fill(array, indices =>
             {
                 var value = 0.0D;
 
@@ -106,6 +106,22 @@ namespace RandomAccessPerlinNoise
             });
         }
 
+        protected virtual Random GetRandom(long seed, long[] location)
+        {
+            var a = BitConverter.GetBytes(seed);
+            var len = a.Length;
+
+            var seedBytes = new byte[len * (location.Length + 1)];
+            Array.Copy(a, 0, seedBytes, 0, a.Length);
+
+            for (var i = 0; i < location.Length; i++)
+            {
+                Array.Copy(BitConverter.GetBytes(location[i]), 0, seedBytes, len * (i + 1), len);
+            }
+
+            return new HashAlgorithmRandom(new MurMurHash3Algorithm128x64(seed), seedBytes);
+        }
+
         private static Array BuildLevel(int level, int[] baseSize, Array randoms)
         {
             var size = new int[baseSize.Length];
@@ -115,17 +131,19 @@ namespace RandomAccessPerlinNoise
             }
 
             var noise = Array.CreateInstance(typeof(Array), baseSize.Select(i => 2).ToArray());
-            Fill(noise, new int[noise.Rank], 0, indices =>
+            Fill(noise, indices =>
             {
                 var rand = (Random)randoms.GetValue(indices);
 
                 var data = Array.CreateInstance(typeof(double), size);
-                Fill(data, new int[size.Length], 0, i => rand.NextDouble());
+                Fill(data, i => rand.NextDouble());
                 return data;
             });
 
             return noise;
         }
+
+        private static void Fill<T>(Array array, Func<int[], T> getValue) => Fill(array, new int[array.Rank], 0, getValue);
 
         private static void Fill<T>(Array array, int[] indices, int index, Func<int[], T> getValue)
         {
@@ -145,22 +163,6 @@ namespace RandomAccessPerlinNoise
                     Fill(array, indices, nextIndex, getValue);
                 }
             }
-        }
-
-        private Random GetRandom(long seed, long[] location)
-        {
-            var a = BitConverter.GetBytes(seed);
-            var len = a.Length;
-
-            var seedBytes = new byte[len * (location.Length + 1)];
-            Array.Copy(a, 0, seedBytes, 0, a.Length);
-
-            for (var i = 0; i < location.Length; i++)
-            {
-                Array.Copy(BitConverter.GetBytes(location[i]), 0, seedBytes, len * (i + 1), len);
-            }
-
-            return new HashAlgorithmRandom(new MurMurHash3Algorithm128x64(seed), seedBytes);
         }
 
         private Array InitializeRandoms(long seed, long[] location)
