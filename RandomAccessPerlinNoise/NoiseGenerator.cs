@@ -113,6 +113,61 @@ namespace RandomAccessPerlinNoise
             });
         }
 
+        public double GetValue(double[] coordinate) => this.GetValue(new long[this.dimensions], coordinate);
+
+        public double GetValue(long[] coordinate, double[] offset)
+        {
+            if (coordinate == null)
+            {
+                throw new ArgumentNullException(nameof(coordinate));
+            }
+
+            if (coordinate.Length != this.dimensions)
+            {
+                throw new ArgumentOutOfRangeException(nameof(coordinate));
+            }
+
+            if (offset == null)
+            {
+                throw new ArgumentNullException(nameof(offset));
+            }
+
+            if (offset.Length != this.dimensions)
+            {
+                throw new ArgumentOutOfRangeException(nameof(offset));
+            }
+
+            var location = new long[this.dimensions];
+            for (var i = 0; i < location.Length; i++)
+            {
+                location[i] = coordinate[i] + (long)Math.Floor(offset[i]);
+            }
+
+            offset = Array.ConvertAll(offset, o => o - Math.Floor(o));
+
+            var levels = this.BuildLevels(location);
+
+            var value = 0.0D;
+
+            for (var level = 0; level < levels.Length; level++)
+            {
+                var sourceIndices = new int[this.dimensions];
+                var portions = new double[this.dimensions];
+                var levelSize = this.levelSizes[level];
+
+                for (var i = 0; i < this.dimensions; i++)
+                {
+                    var dimValue = offset[i] * levelSize[i];
+                    sourceIndices[i] = (int)dimValue;
+                    portions[i] = dimValue - sourceIndices[i];
+                }
+
+                value += this.Interpolate(levels[level], levelSize, new int[this.dimensions], sourceIndices, 0, portions) * this.persistences[level];
+            }
+
+            return value / this.scale;
+        }
+
         protected virtual Random GetRandom(long seed, long[] location)
         {
             var a = BitConverter.GetBytes(seed);
