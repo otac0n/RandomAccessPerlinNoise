@@ -10,6 +10,8 @@ Provides multi-dimensional perlin noise in a random-access format.
 [![Test Coverage](https://img.shields.io/codecov/c/github/otac0n/RandomAccessPerlinNoise.svg?style=flat-square)](https://codecov.io/gh/otac0n/RandomAccessPerlinNoise)
 [![Pre-release packages available](https://img.shields.io/nuget/vpre/RandomAccessPerlinNoise.svg?style=flat-square)](http://nuget.org/packages/RandomAccessPerlinNoise)
 
+[Noise icon by CombineDesign from the Noun Project](https://thenounproject.com/term/noise/359537/)
+
 Example From Tests:
 
 ![NoiseGenerator_Always_ReturnsTheSameDataForTheSameSeed](RandomAccessPerlinNoise.Tests/ExpectedResults/RandomAccessPerlinNoise.Tests.NoiseGeneratorApprovalTests/NoiseGenerator_Always_ReturnsTheSameDataForTheSameSeed.png)

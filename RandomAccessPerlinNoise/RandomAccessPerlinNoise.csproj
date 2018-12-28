@@ -7,10 +7,11 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <TargetFrameworks>net46;netcoreapp2.0</TargetFrameworks>
-    <Description />
+    <Description>Proivdes random-access repeatable n-dimensional Perlin or fractal noise.</Description>
+    <PackageIconUrl>https://raw.github.com/otac0n/RandomAccessPerlinNoise/master/Noise.png</PackageIconUrl>
     <PackageLicenseUrl>https://raw.github.com/otac0n/RandomAccessPerlinNoise/master/license.md</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/otac0n/RandomAccessPerlinNoise</PackageProjectUrl>
-    <PackageTags>perlin;perlin noise;random access perlin noise</PackageTags>
+    <PackageTags>perlin;noise;perlin noise;random access perlin noise</PackageTags>
   </PropertyGroup>
   <ItemGroup>
     <AdditionalFiles Include="..\stylecop.json" Link="stylecop.json" />
@@ -20,6 +21,7 @@
     <PackageReference Include="FixMe" Version="1.0.0" PrivateAssets="All" />
     <PackageReference Include="GitVersionTask" Version="4.0.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.6.2" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.DotNet.Analyzers.Compatibility" Version="0.2.12-alpha" />
     <PackageReference Include="MurMurHashAlgorithm" Version="1.0.2" />
     <PackageReference Include="RandomImpls" Version="1.0.3" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.1.0-beta006" PrivateAssets="All" />
