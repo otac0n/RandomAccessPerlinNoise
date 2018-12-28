@@ -9,8 +9,10 @@ namespace RandomAccessPerlinNoise
 
     public class NoiseGenerator
     {
+        private readonly int dimensions;
         private readonly Interpolation interpolation;
         private readonly int levels;
+        private readonly int[][] levelSizes;
         private readonly double persistence;
         private readonly double[] persistences;
         private readonly double scale;
@@ -52,7 +54,18 @@ namespace RandomAccessPerlinNoise
                 throw new ArgumentOutOfRangeException(nameof(size));
             }
 
-            this.size = size;
+            this.size = Array.ConvertAll(size, s => s);
+            this.dimensions = this.size.Length;
+
+            this.levelSizes = new int[this.levels][];
+            for (var level = 0; level < this.levels; level++)
+            {
+                this.levelSizes[level] = new int[this.dimensions];
+                for (var i = 0; i < this.dimensions; i++)
+                {
+                    this.levelSizes[level][i] = this.size[i] * (1 << level);
+                }
+            }
 
             this.interpolation = interpolation ?? throw new ArgumentNullException(nameof(interpolation));
         }
@@ -64,7 +77,7 @@ namespace RandomAccessPerlinNoise
                 throw new ArgumentNullException(nameof(array));
             }
 
-            if (array.Rank != this.size.Length)
+            if (array.Rank != this.dimensions)
             {
                 throw new ArgumentOutOfRangeException(nameof(array));
             }
@@ -74,18 +87,12 @@ namespace RandomAccessPerlinNoise
                 throw new ArgumentNullException(nameof(location));
             }
 
-            if (location.Length != this.size.Length)
+            if (location.Length != this.dimensions)
             {
                 throw new ArgumentOutOfRangeException(nameof(location));
             }
 
-            var rands = this.InitializeRandoms(this.seed, location);
-
-            var levels = new Array[this.levels];
-            for (var i = 0; i < this.levels; i++)
-            {
-                levels[i] = BuildLevel(i, this.size, rands);
-            }
+            var levels = this.BuildLevels(location);
 
             var size = new int[array.Rank];
             for (var i = 0; i < array.Rank; i++)
@@ -99,7 +106,7 @@ namespace RandomAccessPerlinNoise
 
                 for (var i = 0; i < levels.Length; i++)
                 {
-                    value += this.Interpolate(levels[i], indices, size) * this.persistences[i];
+                    value += this.Interpolate(levels[i], this.levelSizes[i], indices, size) * this.persistences[i];
                 }
 
                 return value / this.scale;
@@ -122,15 +129,9 @@ namespace RandomAccessPerlinNoise
             return new HashAlgorithmRandom(new MurMurHash3Algorithm128x64(seed), seedBytes);
         }
 
-        private static Array BuildLevel(int level, int[] baseSize, Array randoms)
+        private static Array BuildLevel(int[] size, Array randoms)
         {
-            var size = new int[baseSize.Length];
-            for (var i = 0; i < size.Length; i++)
-            {
-                size[i] = baseSize[i] * (1 << level);
-            }
-
-            var noise = Array.CreateInstance(typeof(Array), baseSize.Select(i => 2).ToArray());
+            var noise = Array.CreateInstance(typeof(Array), size.Select(i => 2).ToArray());
             Fill(noise, indices =>
             {
                 var rand = (Random)randoms.GetValue(indices);
@@ -165,6 +166,19 @@ namespace RandomAccessPerlinNoise
             }
         }
 
+        private Array[] BuildLevels(long[] location)
+        {
+            var rands = this.InitializeRandoms(this.seed, location);
+
+            var levels = new Array[this.levels];
+            for (var i = 0; i < this.levels; i++)
+            {
+                levels[i] = BuildLevel(this.levelSizes[i], rands);
+            }
+
+            return levels;
+        }
+
         private Array InitializeRandoms(long seed, long[] location)
         {
             var rands = Array.CreateInstance(typeof(Random), location.Select(i => 2).ToArray());
@@ -182,41 +196,33 @@ namespace RandomAccessPerlinNoise
             return rands;
         }
 
-        private double Interpolate(Array array, int[] indices, int[] size)
+        private double Interpolate(Array level, int[] levelSize, int[] indices, int[] size)
         {
-            var zeroCell = (Array)array.GetValue(new int[array.Rank]);
-            var levelSize = new int[zeroCell.Rank];
-            for (var i = 0; i < levelSize.Length; i++)
+            var sourceIndices = new int[this.dimensions];
+            var portions = new double[this.dimensions];
+            for (var i = 0; i < this.dimensions; i++)
             {
-                levelSize[i] = zeroCell.GetLength(i);
-            }
-
-            var sourceIndices = new int[indices.Length];
-            var portions = new double[indices.Length];
-            for (var i = 0; i < portions.Length; i++)
-            {
-                int remainder;
-                sourceIndices[i] = Math.DivRem(indices[i] * levelSize[i], size[i], out remainder);
+                sourceIndices[i] = Math.DivRem(indices[i] * levelSize[i], size[i], out var remainder);
                 portions[i] = ((double)remainder) / size[i];
             }
 
-            return this.Interpolate(array, levelSize, new int[indices.Length], sourceIndices, 0, portions);
+            return this.Interpolate(level, levelSize, new int[this.dimensions], sourceIndices, 0, portions);
         }
 
-        private double Interpolate(Array array, int[] levelSize, int[] parentIndex, int[] subIndex, int index, double[] portions)
+        private double Interpolate(Array level, int[] levelSize, int[] parentIndex, int[] subIndex, int index, double[] portions)
         {
             var nextIndex = index + 1;
 
             if (index >= parentIndex.Length)
             {
-                var sub = (Array)array.GetValue(parentIndex);
+                var sub = (Array)level.GetValue(parentIndex);
                 return (double)sub.GetValue(subIndex);
             }
             else
             {
                 var origIndexVal = subIndex[index];
 
-                var a = this.Interpolate(array, levelSize, parentIndex, subIndex, nextIndex, portions);
+                var a = this.Interpolate(level, levelSize, parentIndex, subIndex, nextIndex, portions);
 
                 subIndex[index] = origIndexVal + 1;
                 if (subIndex[index] >= levelSize[index])
@@ -225,7 +231,7 @@ namespace RandomAccessPerlinNoise
                     parentIndex[index] = 1;
                 }
 
-                var b = this.Interpolate(array, levelSize, parentIndex, subIndex, nextIndex, portions);
+                var b = this.Interpolate(level, levelSize, parentIndex, subIndex, nextIndex, portions);
 
                 subIndex[index] = origIndexVal;
                 parentIndex[index] = 0;
