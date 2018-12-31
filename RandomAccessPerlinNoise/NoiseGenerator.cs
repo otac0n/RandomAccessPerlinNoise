@@ -104,7 +104,7 @@ namespace RandomAccessPerlinNoise
             {
                 var value = 0.0D;
 
-                for (var i = 0; i < levels.Length; i++)
+                for (var i = 0; i < this.levels; i++)
                 {
                     value += this.Interpolate(levels[i], this.levelSizes[i], indices, size) * this.persistences[i];
                 }
@@ -113,7 +113,7 @@ namespace RandomAccessPerlinNoise
             });
         }
 
-        public double GetValue(double[] coordinate) => this.GetValue(new long[this.dimensions], coordinate);
+        public double GetValue(params double[] coordinate) => this.GetValue(new long[this.dimensions], coordinate);
 
         public double GetValue(long[] coordinate, double[] offset)
         {
@@ -149,7 +149,7 @@ namespace RandomAccessPerlinNoise
 
             var value = 0.0D;
 
-            for (var level = 0; level < levels.Length; level++)
+            for (var level = 0; level < this.levels; level++)
             {
                 var sourceIndices = new int[this.dimensions];
                 var portions = new double[this.dimensions];
@@ -170,15 +170,12 @@ namespace RandomAccessPerlinNoise
 
         protected virtual Random GetRandom(long seed, long[] location)
         {
-            var a = BitConverter.GetBytes(seed);
-            var len = a.Length;
+            var seedBytes = new byte[(1 + this.dimensions) * sizeof(long)];
+            Array.Copy(BitConverter.GetBytes(seed), 0, seedBytes, 0, sizeof(long));
 
-            var seedBytes = new byte[len * (location.Length + 1)];
-            Array.Copy(a, 0, seedBytes, 0, a.Length);
-
-            for (var i = 0; i < location.Length; i++)
+            for (var i = 0; i < this.dimensions; i++)
             {
-                Array.Copy(BitConverter.GetBytes(location[i]), 0, seedBytes, len * (i + 1), len);
+                Array.Copy(BitConverter.GetBytes(location[i]), 0, seedBytes, (i + 1) * sizeof(long), sizeof(long));
             }
 
             return new HashAlgorithmRandom(new MurMurHash3Algorithm128x64(seed), seedBytes);
@@ -266,16 +263,16 @@ namespace RandomAccessPerlinNoise
 
         private double Interpolate(Array level, int[] levelSize, int[] parentIndex, int[] subIndex, int index, double[] portions)
         {
-            var nextIndex = index + 1;
-
-            if (index >= parentIndex.Length)
+            if (index >= this.dimensions)
             {
                 var sub = (Array)level.GetValue(parentIndex);
                 return (double)sub.GetValue(subIndex);
             }
             else
             {
+                var nextIndex = index + 1;
                 var origIndexVal = subIndex[index];
+                var origLocation = regionIndex[index];
 
                 var a = this.Interpolate(level, levelSize, parentIndex, subIndex, nextIndex, portions);
 
@@ -283,13 +280,13 @@ namespace RandomAccessPerlinNoise
                 if (subIndex[index] >= levelSize[index])
                 {
                     subIndex[index] = 0;
-                    parentIndex[index] = 1;
+                    regionIndex[index]++;
                 }
 
                 var b = this.Interpolate(level, levelSize, parentIndex, subIndex, nextIndex, portions);
 
                 subIndex[index] = origIndexVal;
-                parentIndex[index] = 0;
+                regionIndex[index] = origLocation;
 
                 return this.interpolation(a, b, portions[index]);
             }
