@@ -1,4 +1,4 @@
-RandomAccessPerlinNoise
+RandomAccessPerlinNoise <img src="Noise.svg" width="42" height="42" />
 =======
 
 Provides multi-dimensional perlin noise in a random-access format.
