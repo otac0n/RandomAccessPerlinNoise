@@ -1,11 +1,11 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\SharedAssemblyInfo.props" />
   <PropertyGroup>
     <DebugType>Full</DebugType>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <TargetFrameworks>net46;netcoreapp2.0</TargetFrameworks>
+    <TargetFrameworks>net5.0</TargetFrameworks>
     <Description>Proivdes random-access repeatable n-dimensional Perlin or fractal noise.</Description>
     <PackageIconUrl>https://raw.github.com/otac0n/RandomAccessPerlinNoise/master/Noise.png</PackageIconUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
